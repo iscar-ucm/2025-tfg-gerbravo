@@ -3,16 +3,17 @@ import numpy as np
 import os
 import random
 import math
+import tkinter as tk
+from tkinter import filedialog
+
+root = tk.Tk()
+root.withdraw()
 
 # rutas
-CARPETA_LIMPIAS_RGB = r'C:\Users\GERMAN\Desktop\universidad\5_quinto\Trabajo_de_Fin_de_Grado\resultados\fase2\guajaraz1_fotogramas'
-CARPETA_SALIDA_RGB = r'C:\Users\GERMAN\Desktop\universidad\5_quinto\Trabajo_de_Fin_de_Grado\resultados\fase2\dataset'
+CARPETA_LIMPIAS_RGB = filedialog.askdirectory(title="Selecciona la carpeta con los fotogramas limpios")
+CARPETA_SALIDA_RGB = filedialog.askdirectory(title="Selecciona la carpeta de salida para el dataset")
 
-TEXTURAS = [
-    r'C:\Users\GERMAN\Desktop\universidad\5_quinto\Trabajo_de_Fin_de_Grado\assets\fotosFake\fake1.jpg',
-    r'C:\Users\GERMAN\Desktop\universidad\5_quinto\Trabajo_de_Fin_de_Grado\assets\fotosFake\fake2.jpg',
-    r'C:\Users\GERMAN\Desktop\universidad\5_quinto\Trabajo_de_Fin_de_Grado\assets\fotosFake\fake3.jpg'
-]
+TEXTURAS = filedialog.askopenfilenames(title="Selecciona las fotos de texturas (puedes seleccionar varias a la vez)", filetypes=[("Imágenes", "*.jpg *.png *.jpeg"), ("Todos los archivos", "*.*")])
 
 # se crean las carpetas image y labels para que el dataset este estructurado al acabar la ejecucion
 os.makedirs(os.path.join(CARPETA_SALIDA_RGB, 'images'), exist_ok=True)
@@ -138,7 +139,7 @@ for nombre_foto in lista_fotos:
                 all_bboxes_rgb.append(f"0 {yolo_x:.6f} {yolo_y:.6f} {yolo_w:.6f} {yolo_h:.6f}")
                 mascara_maestra_rgb = cv2.bitwise_or(mascara_maestra_rgb, mascara_temp)
 
-        #incorpora la mancha con desenfoque
+        # incorpora la mancha con desenfoque
         if len(all_bboxes_rgb) > 0:
             k_size_rgb = int(w_rgb * 0.05) | 1 
             mascara_maestra_rgb = cv2.GaussianBlur(mascara_maestra_rgb, (k_size_rgb, k_size_rgb), 0)
