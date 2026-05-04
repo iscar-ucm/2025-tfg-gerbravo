@@ -7,7 +7,7 @@ Organización: Universidad Complutense de Madrid (UCM)
 ## Descripción del Proyecto
 Este repositorio contiene el código desarrollado para la automatización, extracción de telemetría y detección por Visión Artificial de *blooms* de cianobacterias en reservas hídricas utilizando drones comerciales. 
 
-El sistema está diseñado bajo el paradigma de **Edge Computing** y propone una solución \textit{software} modular que no requiere de conexión a Internet, solo conexión GPS. Su objetivo final es alimentar un **Gemelo Digital** del cuerpo de agua analizado, optimizando las misiones de reconocimiento y procesando vídeos con telemetría cerrada (OSD).
+El sistema está diseñado bajo el paradigma de **Edge Computing** y propone una solución *software* modular que no requiere de conexión a Internet, solo conexión GPS. Su objetivo final es alimentar un **Gemelo Digital** del cuerpo de agua analizado, optimizando las misiones de reconocimiento y procesando vídeos con telemetría cerrada (OSD).
 
 ## Estructura del Código (`src/`)
 El \textit{pipeline} de ejecución es secuencial. Los *scripts* están numerados según su orden lógico de uso:
