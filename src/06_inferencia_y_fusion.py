@@ -2,15 +2,18 @@ import cv2
 import os
 import csv
 from ultralytics import YOLO
+import tkinter as tk
+from tkinter import filedialog
 
-#rutas
-CARPETA_RGB = r'C:\Users\GERMAN\Desktop\universidad\5_quinto\Trabajo_de_Fin_de_Grado\assets\fotosSucias_guaj1'
-RUTA_MODELO_YOLO = r'C:\Users\GERMAN\Desktop\universidad\5_quinto\Trabajo_de_Fin_de_Grado\resultados\fase2\entrenamiento_yolo5\weights\best.pt'
+root = tk.Tk()
+root.withdraw()
 
-CSV_TELEMETRIA = r'C:\Users\GERMAN\Desktop\universidad\5_quinto\Trabajo_de_Fin_de_Grado\resultados\fase1\guajaraz1_ir_datos.csv'
-
-CARPETA_RESULTADOS_VISUALES = r'C:\Users\GERMAN\Desktop\universidad\5_quinto\Trabajo_de_Fin_de_Grado\resultados\fase3\visualizaciones_finales'
-CSV_SALIDA = r'C:\Users\GERMAN\Desktop\universidad\5_quinto\Trabajo_de_Fin_de_Grado\resultados\fase4\coordenadas_feedback.csv'
+# rutas (ahora solicitadas al usuario mediante ventanas emergentes de explorador)
+CARPETA_RGB = filedialog.askdirectory(title="Selecciona la carpeta que contiene los fotogramas a analizar")
+RUTA_MODELO_YOLO = filedialog.askopenfilename(title="Selecciona el archivo del modelo entrenado YOLO (.pt)", filetypes=[("Archivos PyTorch", "*.pt"), ("Todos los archivos", "*.*")])
+CSV_TELEMETRIA = filedialog.askopenfilename(title="Selecciona el archivo CSV de telemetría obtenido en la fase 1", filetypes=[("Archivos CSV", "*.csv"), ("Todos los archivos", "*.*")])
+CARPETA_RESULTADOS_VISUALES = filedialog.askdirectory(title="Selecciona la carpeta donde se guardarán las imágenes con detecciones")
+CSV_SALIDA = filedialog.asksaveasfilename(title="Indica dónde y con qué nombre guardar el archivo CSV de salida", defaultextension=".csv", filetypes=[("Archivos CSV", "*.csv"), ("Todos los archivos", "*.*")])
 
 # creacion de directorios por si no existen
 os.makedirs(CARPETA_RESULTADOS_VISUALES, exist_ok=True)
@@ -33,11 +36,11 @@ if os.path.exists(CSV_TELEMETRIA):
 else:
     print(f"No se ha encontrado el CSV")
 
-#inicializacion de YOLO
+# inicializacion de YOLO
 print("<--- Iniciando YOLO --->")
 model_yolo = YOLO(RUTA_MODELO_YOLO)
 
-#se lee todo lo que haya en la carperta, pero solo nos quedamos con las imagenes
+# se lee todo lo que haya en la carperta, pero solo nos quedamos con las imagenes
 archivos_rgb = [f for f in os.listdir(CARPETA_RGB) if f.endswith(('.jpg', '.png'))]
 
 # se abre el csv para guardar lo que se encuentre
@@ -59,10 +62,9 @@ with open(CSV_SALIDA, mode='w', newline='', encoding='utf-8') as archivo_csv:
         except:
             latitud, longitud = ("Error formato", "Error formato")
 
-
-        #creacion de ruta para la foto resultado
+        # creacion de ruta para la foto resultado
         ruta_rgb = os.path.join(CARPETA_RGB, nombre_foto)
-        #se lee el archivo y convierte en matriz de pixels
+        # se lee el archivo y convierte en matriz de pixels
         img_rgb = cv2.imread(ruta_rgb)
         
         if img_rgb is None: 
@@ -72,26 +74,26 @@ with open(CSV_SALIDA, mode='w', newline='', encoding='utf-8') as archivo_csv:
         resultados = model_yolo(img_rgb, verbose=False)[0]
         hay_detecciones = False
 
-        #si YOLO encuentra blooms, los recorremos para revisar las cajas que pone
+        # si YOLO encuentra blooms, los recorremos para revisar las cajas que pone
         for box in resultados.boxes:
 
-            #marcamos que ha habido deteccion
+            # marcamos que ha habido deteccion
             hay_detecciones = True
-            #se extraen las coordenadas exactas de la imagen y la confianza
+            # se extraen las coordenadas exactas de la imagen y la confianza
             x1_rgb, y1_rgb, x2_rgb, y2_rgb = map(int, box.xyxy[0])
             confianza = float(box.conf[0])
             
             # se guardan los datos en csv (INCLUYENDO LATITUD Y LONGITUD)
             escritor_csv.writerow([nombre_foto, f"{confianza:.3f}", x1_rgb, y1_rgb, x2_rgb, y2_rgb, latitud, longitud])
             
-            #se dibujamos la caja verde y la etiqueta de texto sobre la foto con la confianza
+            # se dibujamos la caja verde y la etiqueta de texto sobre la foto con la confianza
             color_caja = (0, 255, 0) # Verde en formato BGR
             etiqueta = f"BLOOM | Conf: {confianza:.2f}"
             
             cv2.rectangle(img_rgb, (x1_rgb, y1_rgb), (x2_rgb, y2_rgb), color_caja, 2)
             cv2.putText(img_rgb, etiqueta, (x1_rgb, max(20, y1_rgb - 10)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color_caja, 2)
 
-        #solo guardamos la foto si se ha detectado algo
+        # solo guardamos la foto si se ha detectado algo
         if hay_detecciones:
             cv2.imwrite(os.path.join(CARPETA_RESULTADOS_VISUALES, nombre_foto), img_rgb)
             print(f"[{nombre_foto}] ¡Alga detectada en LAT:{latitud} LON:{longitud}!")
