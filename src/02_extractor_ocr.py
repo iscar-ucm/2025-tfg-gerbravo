@@ -8,16 +8,10 @@ import pandas as pd
 from tkinter import filedialog
 from tkinter import Tk
 
-#se le indica a pytorch que busque el mejor algoritmo convolucional posible de la GPU
+# se le indica a pytorch que busque el mejor algoritmo convolucional posible de la GPU
 torch.backends.cudnn.benchmark = True
 
-CARPETA_RESULTADOS = r'C:\Users\GERMAN\Desktop\universidad\5_quinto\Trabajo_de_Fin_de_Grado\resultados\fase1'
-
-#comprueba si la ruta existe y sino, la crea
-if not os.path.exists(CARPETA_RESULTADOS):
-    os.makedirs(CARPETA_RESULTADOS)
-
-#creacion de ventana
+# creacion de ventana
 root = Tk()
 root.withdraw() # ocultamos la ventana principal de fondo de tkinter para que solo se vea el explorador de archivos
 root.attributes('-topmost', True)
@@ -34,14 +28,24 @@ if not ruta_video:
     print("No se ha seleccionado ningun video. Cancelando operación...")
     exit()
 
-#se crea la ruta absoluta para el csv basandonos en la ruta del video elegido
-#y lo guardamos en la carpeta de resultados de la fase 1
+CARPETA_RESULTADOS = filedialog.askdirectory(title="Selecciona la carpeta donde guardar los resultados")
+
+if not CARPETA_RESULTADOS:
+    print("No se ha seleccionado ninguna carpeta. Cancelando operación...")
+    exit()
+
+# comprueba si la ruta existe y sino, la crea
+if not os.path.exists(CARPETA_RESULTADOS):
+    os.makedirs(CARPETA_RESULTADOS)
+
+# se crea la ruta absoluta para el csv basandonos en la ruta del video elegido
+# y lo guardamos en la carpeta de resultados de la fase 1
 nombre_video_limpio = os.path.splitext(os.path.basename(ruta_video))[0]
 ruta_csv = os.path.join(CARPETA_RESULTADOS, f"{nombre_video_limpio}_datos.csv")
 
 print("<--- Iniciando modelo EasyOCR --->")
 
-#configuracion de EasyOCR y video
+# configuracion de EasyOCR y video
 # gpu=True para usar paralelamente la gpu
 reader = easyocr.Reader(['en'], gpu=True) 
 
@@ -62,38 +66,38 @@ else:
     segundo_fin = int(duracion_total)
 
 datos_finales = []
-#segundo en el que se empieza quitando el despegue, normalmente el 60
+# segundo en el que se empieza quitando el despegue, normalmente el 60
 segundo_actual = segundo_inicio 
 # variable para guardar la fecha
 fecha = "" 
 
 print(f"video cargado. FPS detectados: {fps}. Empezando extraccion del segundo {segundo_inicio} al {segundo_fin}...")
 
-#bucle para procesar segundo a segundo
+# bucle para procesar segundo a segundo
 while cap.isOpened():
-    #comprueab si ha terminado o no de procesar todos los segundos
+    # comprueab si ha terminado o no de procesar todos los segundos
     if segundo_actual > segundo_fin:
         break
 
     frame_id = segundo_actual * fps 
     cap.set(cv2.CAP_PROP_POS_FRAMES, frame_id)
     
-    #se lee un frame exacto del video
+    # se lee un frame exacto del video
     ret, frame = cap.read()
     
     if not ret:
         break
     
-    #se miden el alto y el ancho del frame
+    # se miden el alto y el ancho del frame
     alto, ancho, _ = frame.shape
     
     # recortes, para que solo se trate lo que nos interesa del frame
     roi_arriba = frame[0:int(alto*0.20), 0:ancho]
     roi_abajo = frame[int(alto*0.80):alto, 0:ancho]
 
-    #aqui se dejan las imagenes(las dos secciones de 20%)
+    # aqui se dejan las imagenes(las dos secciones de 20%)
     # en blanco y negro, para mejor tratamiento 
-    #y tambien se duplica su tamaño usando INTER_CUBIC
+    # y tambien se duplica su tamaño usando INTER_CUBIC
     roi_arriba = cv2.resize(roi_arriba, None, fx=2, fy=2, interpolation=cv2.INTER_CUBIC)
     roi_arriba = cv2.cvtColor(roi_arriba, cv2.COLOR_BGR2GRAY)
     roi_abajo = cv2.resize(roi_abajo, None, fx=2, fy=2, interpolation=cv2.INTER_CUBIC)
@@ -106,7 +110,7 @@ while cap.isOpened():
     str_temperaturas = " ".join(texto_arriba)
     str_gps = " ".join(texto_abajo)
     
-    #filtros para evitar confuciones y errores de escritura
+    # filtros para evitar confuciones y errores de escritura
     str_temperaturas = str_temperaturas.replace('O', '0').replace('o', '0').replace('S', '5').replace('s', '5').replace('Z', '2').replace('z', '2')
     str_gps = str_gps.replace('O', '0').replace('o', '0').replace('S', '5').replace('s', '5').replace('Z', '2').replace('z', '2')
     str_gps = str_gps.replace('L0N', 'LON')
@@ -123,7 +127,7 @@ while cap.isOpened():
     match_alt = re.search(r'H:\s*([^\s]+)', str_gps)
     altura = match_alt.group(1) if match_alt else "No detectado"
 
-    #sacamos la fecha
+    # sacamos la fecha
     if fecha == "":
         match_fecha = re.search(r'(\d{4}[/.-]\d{1,2}[/.-]\d{1,2})', str_gps)
         if match_fecha:
@@ -136,7 +140,7 @@ while cap.isOpened():
         hora = match_hora.group(1)
         # se reemplaza cualquier punto, coma o punto y coma que haya leido el OCR por dos puntos, para evitar fallos
         hora = re.sub(r'[:.,;]', ':', hora)
-        #si el OCR se comio el ultimo digito (ej: 04:57:3 en vez de 30), se rellena con un 0 al final
+        # si el OCR se comio el ultimo digito (ej: 04:57:3 en vez de 30), se rellena con un 0 al final
         if len(hora) == 7:
             hora += "0"
     else:
@@ -175,7 +179,7 @@ while cap.isOpened():
 
 cap.release()
 
-#exportar a CSV
+# exportar a CSV
 df = pd.DataFrame(datos_finales)
 df.to_csv(ruta_csv, index=False, encoding='utf-8', sep=';')
 
