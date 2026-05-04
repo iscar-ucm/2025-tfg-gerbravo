@@ -93,13 +93,13 @@ def leer_coordenadas_archivo(ruta_archivo):
         with open(ruta_archivo, 'r', encoding='utf-8') as f:
             for linea in f:
                 linea = linea.strip()
-                #si hay algun comentario o linea sin nada nos lo saltamos
+                # si hay algun comentario o linea sin nada nos lo saltamos
                 if not linea or linea.startswith('#'): 
                     continue
-                #se fragmenta la linea usando la , como separador
+                # se fragmenta la linea usando la , como separador
                 partes = linea.split(',')
                 if len(partes) >= 2:
-                    #se convierten ambos fragmentos en float
+                    # se convierten ambos fragmentos en float
                     coords.append((float(partes[0].strip()), float(partes[1].strip())))
     except Exception as e:
         print(f"Error al leer el archivo: {e}")
@@ -113,7 +113,7 @@ if __name__ == "__main__":
 
     print("Por favor, selecciona el archivo de coordenadas (.txt) en la ventana emergente...")
     
-    # Abrir ventana de diálogo para seleccionar el archivo
+    # Abrir ventana de diálogo para seleccionar el archivo de entrada
     ruta_archivo = filedialog.askopenfilename(
         title="Selecciona el archivo de coordenadas (.txt)",
         filetypes=[("Archivos de texto", "*.txt"), ("Todos los archivos", "*.*")]
@@ -132,10 +132,10 @@ if __name__ == "__main__":
         sys.exit(1)
 
     print(f"\n<--- Ruta para {len(coord_usuario)} puntos --->")
-    #se hace el calculo
+    # se hace el calculo
     tsp = TspDron(coord_usuario)
     
-    #lineas encargadas de cronometrar lo que tarda en ejecutarse el algoritmo y de ponerlo en marcha
+    # lineas encargadas de cronometrar lo que tarda en ejecutarse el algoritmo y de ponerlo en marcha
     inicio = time.perf_counter()
     metodo, (ruta_indices, dist) = tsp.resolver()
     fin = time.perf_counter()
@@ -143,32 +143,37 @@ if __name__ == "__main__":
     # se escribe por consola la ruta calculada
     ruta_visual = " -> ".join(str(nodo) for nodo in ruta_indices) + f" -> {ruta_indices[0]}"
 
-    #informacion de la ejecucion
+    # informacion de la ejecucion
     print(f"Método: {metodo}")
     print(f"Orden: {ruta_visual}")
     print(f"Tiempo: {(fin - inicio)*1000:.3f} ms")
     print(f"Distancia recorrida: {dist:.1f} metros")
     
-    CARPETA_RESULTADOS = r'C:\Users\GERMAN\Desktop\universidad\5_quinto\Trabajo_de_Fin_de_Grado\resultados\fase0'
-    if not os.path.exists(CARPETA_RESULTADOS):
-        os.makedirs(CARPETA_RESULTADOS)
-    
-    # Al eliminar argparse, fijamos el nombre de salida por defecto
-    nombre_salida = 'ruta_optimizada.csv'
-    ruta_salida = os.path.join(CARPETA_RESULTADOS, nombre_salida)
+    # Pedir al usuario dónde guardar la ruta optimizada
+    print("Por favor, indica dónde guardar la ruta optimizada...")
+    ruta_salida = filedialog.asksaveasfilename(
+        title="Guardar ruta optimizada como...",
+        defaultextension=".csv",
+        initialfile="ruta_optimizada.csv",
+        filetypes=[("Archivos CSV", "*.csv"), ("Todos los archivos", "*.*")]
+    )
 
-    #guardado del resultado en un archivo CSV
+    if not ruta_salida:
+        print("\n[INFO] Guardado cancelado por el usuario.\n")
+        sys.exit(0)
+
+    # guardado del resultado en un archivo CSV
     try:
         with open(ruta_salida, 'w', encoding='utf-8') as f:
             f.write(f"# Metodo: {metodo} | Distancia: {dist:.1f}m\n")
             f.write("latitud,longitud,orden\n")
             
-            #guardamos las coordenadas ya en el orden en el que el dron tiene que hacer el recorrido
+            # guardamos las coordenadas ya en el orden en el que el dron tiene que hacer el recorrido
             for orden_secuencia, indice_original in enumerate(ruta_indices):
                 lat, lon = coord_usuario[indice_original]
                 f.write(f"{lat},{lon},{orden_secuencia}\n")
                 
-            #se añade la vuelta al primer punto
+            # se añade la vuelta al primer punto
             lat_ini, lon_ini = coord_usuario[ruta_indices[0]]
             f.write(f"{lat_ini},{lon_ini},RETORNO\n")
             
