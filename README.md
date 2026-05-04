@@ -1,7 +1,8 @@
 ## 2025-tfg-gerbravo
-##Proyecto de planificación de drones y detección temprana de cianobacterias 
+Proyecto de planificación de drones y detección temprana de cianobacterias 
 
 Autor: Germán Bravo Sánchez 
+
 Organización: Universidad Complutense de Madrid (UCM)
 
 ## Descripción del Proyecto
