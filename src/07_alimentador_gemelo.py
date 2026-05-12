@@ -19,7 +19,7 @@ def desplazar_coordenada(coord_str):
 
 print("<--- INICIANDO SIMULADOR FRANKENSTEIN (VISUAL + LÓGICO) --->")
 
-# 1. Selección de archivos
+# Selección de archivos
 TEXTURAS = filedialog.askopenfilenames(
     title="0. Selecciona las FOTOS DE TEXTURAS (fake1, fake2...)",
     filetypes=[("Imágenes", "*.jpg *.png *.jpeg")]
@@ -49,16 +49,24 @@ with open(CSV_ENTRADA, mode='r', encoding='utf-8-sig') as f:
     lector.fieldnames = [n.strip() for n in lector.fieldnames]
     filas_csv = list(lector)
 
-# 3 fijos (indices 0,1,2) -> 0, 1 o 2 blooms al azar
-# 2 variables (indices 3,4) -> uno exacto, otro desplazado. Ambos con 1 bloom.
-reglas = []
-for i in range(3):
-    reglas.append({"tipo": "Fijo (Zodiac)", "blooms": random.choice([0, 1, 2]), "shift": False})
 
-v_idx = [3, 4]
-random.shuffle(v_idx)
-reglas.insert(v_idx[0], {"tipo": "Variable (Predictor)", "blooms": 1, "shift": False}) # Exacto
-reglas.insert(v_idx[1], {"tipo": "Variable (Predictor)", "blooms": 1, "shift": True})  # Desplazado
+# 3 variables predictivos (índices 0, 1, 2) -> 1 exacto, 1 desplazado, y 1 fallo del predictor (0 blooms)
+reglas_variables = [
+    {"tipo": "Variable (Predictor)", "blooms": 1, "shift": False},
+    {"tipo": "Variable (Predictor)", "blooms": 1, "shift": True},
+    {"tipo": "Variable (Predictor)", "blooms": 0, "shift": False}
+]
+random.shuffle(reglas_variables)
+
+# 2 fijos de zodiac (índices 3, 4) -> B >= 0, al azar (0, 1 o 2 blooms)
+reglas_fijos = [
+    {"tipo": "Fijo (Zodiac)", "blooms": random.choice([0, 1, 2]), "shift": False},
+    {"tipo": "Fijo (Zodiac)", "blooms": random.choice([0, 1, 2]), "shift": False}
+]
+
+# se unen ambas listas para que los índices 0,1,2 sean variables y 3,4 sean fijos
+reglas = reglas_variables + reglas_fijos
+
 
 resultados_csv = []
 
@@ -72,7 +80,6 @@ for i in range(5):
     img_final = img.copy()
     
     if regla["blooms"] > 0:
-        # Segmentación Agua (HSV)
         hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
         mask = cv2.inRange(hsv, np.array([29, 101, 96]), np.array([111, 229, 171]))
         mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, np.ones((15, 15), np.uint8))
@@ -83,7 +90,7 @@ for i in range(5):
         mascara_maestra = np.zeros((h, w), dtype=np.uint8)
         
         for _ in range(regla["blooms"]):
-            # Textura y color
+            #textura y color
             txt = cv2.resize(random.choice(texturas_cargadas), (w, h))
             hls_t = cv2.cvtColor(txt, cv2.COLOR_BGR2HLS)
             hls_t[:,:,0] = np.mod(hls_t[:,:,0].astype(float) + (bg_h - np.mean(hls_t[:,:,0])) * 0.8, 180)
