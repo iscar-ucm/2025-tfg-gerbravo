@@ -18,6 +18,7 @@ El \textit{pipeline} de ejecución es secuencial. Los *scripts* están numerados
 4. **`04_generador_sintetico.py`**: Motor de generación procedimental que utiliza máscaras HSV y fusión matemática para insertar *blooms* artificiales realistas sobre el agua, creando el *dataset* de entrenamiento.
 5. **`05_entrenamiento_yolo.py`**: *Script* de configuración y entrenamiento de la red neuronal convolucional (YOLOv8) sobre el *dataset* generado.
 6. **`06_inferencia_y_fusion.py`**: Ejecuta la detección final y cruza los fotogramas positivos de YOLOv8 con la telemetría del OCR, exportando un archivo `CSV` listo para inyectar en el Gemelo Digital.
+7. **`07_simulador_gemelo.py`**: Simulador que recrea el ciclo de retroalimentación hacia el Gemelo Digital, inyectando *blooms* y desplazando coordenadas para validar la corrección de desviaciones físicas (deriva por viento o corrientes).
 
 ## Instalación y Uso
 
